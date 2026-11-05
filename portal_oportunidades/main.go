@@ -11,26 +11,53 @@ import (
 
 func main() {
 
-	listaOportunidade := []oportunidades.Oportunidade{}
+	// Função para listar oportunidades
+	listarOportunidadesFn := func (wctx restserver.WebContext) {
+		result, err := sqlDB.NewQuery[oportunidades.Oportunidade](
+			wctx.Context(),
+			"SELECT id, titulo, empresa, categoria, ativa FROM oportunidades",
+		).Many()
+		if err != nil {
+			wctx.ErrorResponse(http.StatusInternalServerError, err)
+		}
 
-	listaOportunidade = append(listaOportunidade, oportunidades.CriarNovaOportunidade("Curso de Java", true))
-	listaOportunidade = append(listaOportunidade, oportunidades.CriarNovaOportunidade("Curso de C++", true))
-
-	println("####### TODAS AS OPORTUNIDADES #######")
-	oportunidades.ImprimirLista(listaOportunidade)
-	println("\n####### OPORTUNIDADES ATIVAS #######")
-	oportunidades.ImprimirSoOportunidadesAtivas(listaOportunidade)
-
-	listarOportunidades := func (wctx restserver.WebContext) {
-	wctx.JsonResponse(http.StatusOK, listaOportunidade)
+		wctx.JsonResponse(http.StatusOK, result)
 	}
 
-	
+	// Função para criar oportunidade
+	cadastrarOportunidadesFn := func (wctx restserver.WebContext) {
+		var body oportunidades.CriarOportunidadeRequest
+		if err := wctx.DecodeBody(&body); err != nil {
+			wctx.ErrorResponse(http.StatusBadRequest, err)
+			return
+		}
+
+		if err := sqlDB.NewStatement(
+			wctx.Context(),
+			"INSERT INTO oportunidades (titulo, empresa, categoria) VALUES ($1, $2, $3)",
+			body.Titulo,
+			body.Empresa,
+			body.Categoria,
+		).Execute(); err != nil {
+			wctx.ErrorResponse(http.StatusInternalServerError, err)
+			return
+		}
+		
+		wctx.EmptyResponse(http.StatusCreated)
+	}
+
+	// Rotas
 	rotasDaMinhaAplicacao := []restserver.Route{
 		{
 			URI: "oportunidades",
 			Method: http.MethodGet,
-			Function: listarOportunidades,
+			Function: listarOportunidadesFn,
+			Prefix: restserver.NoPrefix,
+		},
+		{
+			URI: "oportunidades",
+			Method: http.MethodPost,
+			Function: cadastrarOportunidadesFn,
 			Prefix: restserver.NoPrefix,
 		},
 	}
