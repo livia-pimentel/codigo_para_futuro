@@ -1,0 +1,6 @@
+{
+  "gopls": {
+    "importsSource": "goimports",
+    "completionBudget": "0s"
+  }
+}
