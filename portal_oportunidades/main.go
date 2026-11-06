@@ -46,6 +46,24 @@ func main() {
 		wctx.EmptyResponse(http.StatusCreated)
 	}
 
+	// Função para retornar oportunidade especifica por id
+	listarOportunidadeIdFn := func (wctx restserver.WebContext) {
+		id := wctx.PathParam("id")
+
+		result, err := sqlDB.NewQuery[oportunidades.Oportunidade](
+			wctx.Context(),
+			"SELECT id, titulo, empresa, categoria, ativa FROM oportunidades WHERE id = $1",
+			id,
+		).One()
+
+		if err != nil {
+			wctx.ErrorResponse(http.StatusInternalServerError, err)
+			return
+		}
+
+		wctx.JsonResponse(http.StatusOK, result)
+	}
+
 	// Rotas
 	rotasDaMinhaAplicacao := []restserver.Route{
 		{
@@ -58,6 +76,12 @@ func main() {
 			URI: "oportunidades",
 			Method: http.MethodPost,
 			Function: cadastrarOportunidadesFn,
+			Prefix: restserver.NoPrefix,
+		},
+		{
+			URI: "oportunidades/{id}",
+			Method: http.MethodGet,
+			Function: listarOportunidadeIdFn,
 			Prefix: restserver.NoPrefix,
 		},
 	}
