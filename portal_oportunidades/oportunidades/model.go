@@ -9,7 +9,14 @@ type Oportunidade struct {
 }
 
 type CriarOportunidadeRequest struct {
-	Titulo string `json:"titulo" validate:"required,min=3,max=120"`
+	Titulo string `json:"titulo" validate:"required,min=2,max=120"`
 	Empresa  string `json:"empresa" validate:"required"`
 	Categoria  string `json:"categoria" validate:"required"`
+}
+
+type AtualizarOportunidadeRequest struct {
+	Titulo string `json:"titulo" validate:"required,min=2,max=120"`
+	Empresa  string `json:"empresa" validate:"required"`
+	Categoria  string `json:"categoria" validate:"required"`
+	Ativa  bool `json:"ativa"`
 }

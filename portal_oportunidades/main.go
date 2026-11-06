@@ -64,6 +64,31 @@ func main() {
 		wctx.JsonResponse(http.StatusOK, result)
 	}
 
+	// Função para atualizar oportunidade especifica por id
+	atualizarOportunidadeFn := func (wctx restserver.WebContext) {
+		id := wctx.PathParam("id")
+
+		var body oportunidades.AtualizarOportunidadeRequest
+		if err := wctx.DecodeBody(&body); err != nil {
+			wctx.ErrorResponse(http.StatusBadRequest, err)
+			return
+		}
+
+		if err := sqlDB.NewStatement(
+			wctx.Context(),
+			"UPDATE oportunidades SET titulo = $1, empresa = $2, categoria = $3 WHERE id =$4",
+			body.Titulo,
+			body.Empresa,
+			body.Categoria,
+			id,
+		).Execute(); err != nil {
+			wctx.ErrorResponse(http.StatusInternalServerError, err)
+			return
+		}
+		
+		wctx.EmptyResponse(http.StatusCreated)
+	}
+
 	// Rotas
 	rotasDaMinhaAplicacao := []restserver.Route{
 		{
@@ -82,6 +107,12 @@ func main() {
 			URI: "oportunidades/{id}",
 			Method: http.MethodGet,
 			Function: listarOportunidadeIdFn,
+			Prefix: restserver.NoPrefix,
+		},
+		{
+			URI: "oportunidades/{id}",
+			Method: http.MethodPut,
+			Function: atualizarOportunidadeFn,
 			Prefix: restserver.NoPrefix,
 		},
 	}
