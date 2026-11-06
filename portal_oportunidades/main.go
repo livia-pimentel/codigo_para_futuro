@@ -76,7 +76,7 @@ func main() {
 
 		if err := sqlDB.NewStatement(
 			wctx.Context(),
-			"UPDATE oportunidades SET titulo = $1, empresa = $2, categoria = $3 WHERE id =$4",
+			"UPDATE oportunidades SET titulo = $1, empresa = $2, categoria = $3 WHERE id = $4",
 			body.Titulo,
 			body.Empresa,
 			body.Categoria,
@@ -86,7 +86,23 @@ func main() {
 			return
 		}
 		
-		wctx.EmptyResponse(http.StatusCreated)
+		wctx.EmptyResponse(http.StatusOK)
+	}
+
+	// Função para deletar oportunidade
+	deletarOportunidadeFn := func (wctx restserver.WebContext) {
+		id := wctx.PathParam("id")
+
+		if err := sqlDB.NewStatement(
+			wctx.Context(),
+			"DELETE FROM oportunidades WHERE id = $1",
+			id,
+		).Execute(); err != nil {
+			wctx.ErrorResponse(http.StatusInternalServerError, err)
+			return
+		}
+		
+		wctx.EmptyResponse(http.StatusOK)
 	}
 
 	// Rotas
@@ -113,6 +129,12 @@ func main() {
 			URI: "oportunidades/{id}",
 			Method: http.MethodPut,
 			Function: atualizarOportunidadeFn,
+			Prefix: restserver.NoPrefix,
+		},
+		{
+			URI: "oportunidades/{id}",
+			Method: http.MethodDelete,
+			Function: deletarOportunidadeFn,
 			Prefix: restserver.NoPrefix,
 		},
 	}
